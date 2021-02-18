@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Text;
+using System.Linq;
+
 
 namespace ImageToTextArt
 {
@@ -11,11 +12,9 @@ namespace ImageToTextArt
 
         public static string GenerateImageString(byte[,] grayScapeInput, List<(byte[,] bmp, char chr)> charImages)
         {
-
+            return OverAllIntensityBased(grayScapeInput, charImages);
             var imgHeight = grayScapeInput.GetLength(0);
             var imgWidth = grayScapeInput.GetLength(1);
-
-
 
             var winHeight = charImages[0].bmp.GetLength(0);
             var winWidth = charImages[0].bmp.GetLength(1);
@@ -26,58 +25,87 @@ namespace ImageToTextArt
                 for (var x = 0; x < imgWidth; x += winWidth)
                 {
                     var window = CreateWindow(grayScapeInput, new Rectangle(x, y, winWidth, winHeight));
-                    var c = FindBestMatch(window, charImages);
+                    var c = Matchers.FindBestMatch(window, charImages);
                     res += c;
                 }
                 res += "\n";
             }
 
-            // pad image to match charImages size
-
-            File.WriteAllText(@"C:\Users\PC\source\repos\ImageToTextArt\out.txt", res);
-            // go over each windows and find best matching char
             return res;
             
 
         }
 
 
-        static char FindBestMatch(byte[,] window, List<(byte[,] bmp, char chr)> charImages)
+
+        static string OverAllIntensityBased(byte[,] grayScapeInput, List<(byte[,] bmp, char chr)> charImages)
         {
-            return SumMatch(window, charImages);    
-        }
+            var rankedCharImages = charImages.OrderBy(x => HelperFunctions.Sum(x.bmp)).ToList(); ;
 
-
-        static char SumMatch(byte[,] window, List<(byte[,] bmp, char chr)> charImages)
-        {
-            var wSum = Sum(window);
-            var diff = 100000000000000;
-
-            char c = 'a';
-            foreach(var charImg in charImages)
+            var windows = CreateWindows(grayScapeInput, charImages).ToList();
+            
+            var sums = new (int sum, int index)[windows.Count];
+            var i = 0;
+            foreach(var w in windows)
             {
-                var cSum = Sum(charImg.bmp);
+                sums[i] = (HelperFunctions.Sum(w.window), i);
+                i++;
+            }
+            
+            var max = sums.Max(x => x.sum);
 
-                if(Math.Abs(cSum - wSum) < diff)
+            sums = sums.OrderBy(x => x.sum).ToArray();
+
+            var scaled = sums.Select(x =>((byte) ( x.sum / (max / (rankedCharImages.Count-1.0d))),x.index)).ToArray();
+
+            var max2 = scaled.Max(x => x.Item1);
+
+
+
+            var imgHeight = grayScapeInput.GetLength(0);
+            var imgWidth = grayScapeInput.GetLength(1);
+
+            var winHeight = charImages[0].bmp.GetLength(0);
+            var winWidth = charImages[0].bmp.GetLength(1);
+
+            var res = "";
+            i = 0;
+
+            var ordered = scaled.OrderBy(x => x.index).ToArray();
+            for (var y = 0; y < imgHeight; y += winHeight)
+            {
+                for (var x = 0; x < imgWidth; x += winWidth)
                 {
-                    diff = Math.Abs(cSum - wSum);
-                    c = charImg.chr;
-                }                
+
+                    res += rankedCharImages[ordered[i].Item1].chr.ToString();
+                    i++;
+                }
+                res += "\n";
             }
 
-            return c;
+            return res;
         }
 
-        static int Sum(byte[,] pixels)
+
+
+        static IEnumerable<(byte[,] window, int index, int sum, int rank)> CreateWindows(byte[,] grayScapeInput, List<(byte[,] bmp, char chr)> charImages)
         {
-            var total = 0;
-            foreach(var p in pixels)
-            {
-                total += p;
-            }
-            return total;
+            var imgHeight = grayScapeInput.GetLength(0);
+            var imgWidth = grayScapeInput.GetLength(1);
 
+            var winHeight = charImages[0].bmp.GetLength(0);
+            var winWidth = charImages[0].bmp.GetLength(1);
+            var index = 0;
+            for (var y = 0; y < imgHeight; y += winHeight)
+            {
+                for (var x = 0; x < imgWidth; x += winWidth)
+                {
+                    yield return (CreateWindow(grayScapeInput, new Rectangle(x, y, winWidth, winHeight)), index,0,0);
+                    index++;
+                }
+            }
         }
+
 
         static byte[,] CreateWindow(byte[,] grayScapeInput, Rectangle rect)
         {
