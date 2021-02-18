@@ -12,7 +12,8 @@ namespace ImageToTextArt
     {
         static void Main(string[] args)
         {
-            var charBmps = CharBitMapGenerator.GenerateCharBitMapImages();
+            var charSize = 16f;
+            var charBmps = CharBitMapGenerator.GenerateCharBitMapImages(charSize);
 
             var grayScaleBmps = charBmps.Select(x => (BmpToGrayScalePixels(x.bmp), x.chr)).ToList();
 

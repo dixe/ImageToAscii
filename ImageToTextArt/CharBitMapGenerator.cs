@@ -10,14 +10,14 @@ namespace ImageToTextArt
 {
     class CharBitMapGenerator
     {
-        public static List<(Bmp bmp, char chr)> GenerateCharBitMapImages()
+        public static List<(Bmp bmp, char chr)> GenerateCharBitMapImages(float charSize)
         {
             var bmps = new List<Bmp>();
             char start = (char)32;
             var maxChar = 128;
             for (char c = start; c < maxChar; c++)
             {
-                bmps.Add(CharBmp(c));
+                bmps.Add(CharBmp(c, charSize));
             }
 
             var allRect = bmps.Select(x => GetRectangle(x)).ToList();
@@ -67,21 +67,9 @@ namespace ImageToTextArt
             return bmp;
         }
 
-        static Bmp SetAll(Bmp bmp, BmpPixel px)
+        static Bmp CharBmp(char c, float size)
         {
-            for (var y = 0; y < bmp.Height; y++)
-            {
-                for (var x = 0; x < bmp.Width; x++)
-                {
-                    bmp.Pixels[y, x] = px;                    
-                }
-            }
-            return bmp;
-        }
-
-        static Bmp CharBmp(char c)
-        {
-            var font = new Font("Consolas", 16f);
+            var font = new Font("Consolas", size);
 
             var bitmap = new Bitmap(100,100);
         

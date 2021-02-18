@@ -4,12 +4,12 @@ namespace ImageToTextArt.BmpLoader
     public class BmpParser
     {
 
-        public static Bmp FromPixels(BmpPixel[,] pixels)
+        public static Bmp FromPixels(BmpPixel[,] pixels, ushort bitsPerPixel = 32)
         {
 
             var header = new BmpHeader {
                 DataOffSet = 54,
-                FileSize = (uint)(pixels.Length * 4 + 54),
+                FileSize = (uint)(pixels.Length * (bitsPerPixel / 8) + 54),
                 Reserved = 0,
                 Signature = 0x4d42
             };
@@ -19,7 +19,7 @@ namespace ImageToTextArt.BmpLoader
 
             var infoHeader = new BmpInfoHeader
             {
-                BitPerPixel = 32,
+                BitPerPixel = bitsPerPixel,
                 ColorsUsed = 0,
                 Compression = 0,
                 Height = height,

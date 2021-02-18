@@ -42,8 +42,8 @@ namespace BmpTests
 
 
         [DataTestMethod]
-        [DataRow(@"C:\Users\PC\source\repos\ImageToTextArt\BmpTests\test.bmp")]
-        [DataRow(@"C:\Users\PC\source\repos\ImageToTextArt\BmpTests\test2.bmp")]
+        [DataRow(@"../../../../BmpTests\test.bmp")]
+        [DataRow(@"../../../../BmpTests\test2.bmp")]
         public void BmpParseSave(string fileName)
         {
             var bytes = File.ReadAllBytes(fileName);
@@ -60,13 +60,13 @@ namespace BmpTests
 
 
         [DataTestMethod]
-        [DataRow(@"C:\Users\PC\source\repos\ImageToTextArt\BmpTests\test.bmp")]
-        //[DataRow(@"C:\Users\PC\source\repos\ImageToTextArt\BmpTests\test2.bmp")]
+        [DataRow(@"../../../../BmpTests\test.bmp")]
+        [DataRow(@"../../../../BmpTests\test2.bmp")]
         public void BmpFromPixels(string fileName)
         {
             var bytes = File.ReadAllBytes(fileName);
             var bmpFromBytes = BmpParser.Parse(bytes);
-            var bmp = BmpParser.FromPixels(bmpFromBytes.Pixels);
+            var bmp = BmpParser.FromPixels(bmpFromBytes.Pixels, bmpFromBytes.InfoHeader.BitPerPixel);
             bmp.InfoHeader.BitPerPixel = bmpFromBytes.InfoHeader.BitPerPixel;
             var outbytes = bmp.GetFileBytes();
 
